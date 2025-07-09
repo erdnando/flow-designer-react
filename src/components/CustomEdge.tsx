@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BaseEdge, getSmoothStepPath, type EdgeProps } from 'reactflow';
+import { BaseEdge, getBezierPath, type EdgeProps } from 'reactflow';
 import { useFlowStore } from '../stores/flowStore';
 import './CustomEdge.css';
 
@@ -18,15 +18,16 @@ const CustomEdge: React.FC<EdgeProps> = ({
   const { getEdgeErrors } = useFlowStore();
   const [isFlashing, setIsFlashing] = useState(false);
   
-  // Get the path d attribute based on edge positions
-  const [edgePath] = getSmoothStepPath({
+  // Use getBezierPath for smoother curved edges
+  const [edgePath] = getBezierPath({
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
-    borderRadius: 8, // Adding border radius for smoother edges
+    // These curvature values create a nice smooth curve
+    curvature: 0.3
   });
   
   // Get validation errors for this edge
@@ -62,8 +63,11 @@ const CustomEdge: React.FC<EdgeProps> = ({
     cursor: 'pointer',
   };
   
+  // Determine the classes based on the edge state
+  const edgeClassName = `custom-edge-container ${hasErrors ? 'has-error' : hasWarnings ? 'has-warning' : selected ? 'selected' : ''}`;
+  
   return (
-    <g>
+    <g className={edgeClassName}>
       {/* Add a title element for tooltips */}
       <title>{errorMessages}</title>
       <BaseEdge 

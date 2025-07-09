@@ -425,7 +425,7 @@ const FlowCanvas: React.FC = () => {
           fitView
           minZoom={0.3} // Límite mínimo de zoom
           maxZoom={2} // Límite máximo de zoom
-          defaultEdgeOptions={{ type: 'default', animated: true }}
+          defaultEdgeOptions={{ type: 'default', animated: false }}
           fitViewOptions={{ padding: 0.2 }}
           proOptions={{ hideAttribution: true }}
           defaultViewport={{ x: 0, y: 0, zoom: 0.9 }} // Viewport por defecto con zoom optimizado

@@ -103,17 +103,28 @@
 
 .react-flow__handle {
   background: #e14d43;
-  width: 10px;
-  height: 10px;
+  width: 15px;
+  height: 15px;
+  
 }
 
 .react-flow__edge {
   stroke: #e14d43;
-  stroke-width: 2;
+  stroke-width: 2.5;
+  stroke-dasharray: 5, 3;
+  animation: flowEdgeAnimation 15s linear infinite;
 }
 
 .react-flow__edge.selected {
   stroke: #ff6b5a;
+  stroke-width: 2;
+  stroke-dasharray: none;
+}
+
+@keyframes flowEdgeAnimation {
+  to {
+    stroke-dashoffset: -500;
+  }
 }
 
 .react-flow__controls {

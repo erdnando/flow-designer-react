@@ -1,21 +1,82 @@
 /* Custom Edge styling */
-.custom-edge {
+.react-flow__edge {
   transition: stroke 0.3s ease, stroke-width 0.3s ease;
 }
 
-.custom-edge.selected {
+.react-flow__edge.selected {
   stroke: #2684ff;
   stroke-width: 3px;
 }
 
-.custom-edge.has-error {
-  stroke: #ff4d4f;
-  stroke-width: 2px;
+/* Override default straight edges with curved ones */
+.react-flow__edge path {
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.custom-edge.has-warning {
-  stroke: #faad14;
+/* Make edges smoother with a slightly transparent color and add dashed effect with animation */
+.react-flow__edge path {
+  stroke-opacity: 0.8;
+  stroke-width: 2.5;
+  stroke-dasharray: 5, 3;
+  animation: flowEdgeAnimation 15s linear infinite;
+}
+
+@keyframes flowEdgeAnimation {
+  to {
+    stroke-dashoffset: -400;
+  }
+}
+
+/* Edge with error */
+.react-flow__edge.has-error path {
+  stroke: #ff4d4f;
   stroke-width: 2px;
+  stroke-dasharray: 3, 2;
+  animation: flowEdgeErrorAnimation 8s linear infinite;
+}
+
+@keyframes flowEdgeErrorAnimation {
+  to {
+    stroke-dashoffset: -300;
+  }
+}
+
+/* Edge with warning */
+.react-flow__edge.has-warning path {
+  stroke: #faad14;
+  stroke-width: 1.5px;
+  stroke-dasharray: 5, 3, 1, 3;
+  animation: flowEdgeWarningAnimation 10s linear infinite;
+}
+
+@keyframes flowEdgeWarningAnimation {
+  to {
+    stroke-dashoffset: -400;
+  }
+}
+
+/* Selected edge styling */
+.react-flow__edge.selected path {
+  stroke: #2684ff !important;
+  stroke-width: 2px !important;
+  stroke-dasharray: none !important;
+  filter: drop-shadow(0 0 3px rgba(38, 132, 255, 0.4));
+  animation: none !important;
+}
+
+/* Add fancy edge animations on hover */
+.react-flow__edge:hover path {
+  stroke-width: 1.8px;
+  stroke-dasharray: 4, 2;
+  animation: flowEdgeHoverAnimation 6s linear infinite;
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.3));
+}
+
+@keyframes flowEdgeHoverAnimation {
+  to {
+    stroke-dashoffset: -200;
+  }
 }
 
 /* Edge animations */
