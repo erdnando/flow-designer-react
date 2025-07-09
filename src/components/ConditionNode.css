@@ -1,0 +1,196 @@
+.condition-node {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diamond {
+  width: 90px;
+  height: 90px;
+  background: #111;
+  border: 2.5px solid #444;
+  transform: rotate(45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.22);
+  z-index: 2;
+  border-radius: 10px; /* Esquinas redondeadas para el diamante */
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    outline 0.15s,
+    background 0.15s,
+    transform 0.15s;
+}
+
+.diamond.selected {
+  border-color: #fff !important;
+  border-width: 4px !important;
+  box-shadow:
+    0 0 0 6px rgba(31, 170, 255, 0.6),
+    0 0 0 12px #fff,
+    0 0 30px 10px rgba(31, 170, 255, 0.67),
+    0 2px 16px 0 rgba(31, 170, 255, 0.53),
+    0 4px 32px 0 rgba(31, 170, 255, 0.27);
+  outline: 5px solid #1faaff !important;
+  outline-offset: 2px !important;
+  background: linear-gradient(135deg, #2a2f36 50%, rgba(31, 170, 255, 0.27) 100%) !important;
+  animation: diamond-glow 2s infinite alternate;
+  transform: rotate(45deg) scale(1.1);
+  z-index: 20;
+}
+
+@keyframes diamond-glow {
+  0% {
+    box-shadow:
+      0 0 0 6px rgba(31, 170, 255, 0.6),
+      0 0 0 12px #fff,
+      0 0 20px 5px rgba(31, 170, 255, 0.67),
+      0 2px 16px 0 rgba(31, 170, 255, 0.53),
+      0 4px 32px 0 rgba(31, 170, 255, 0.27);
+  }
+  100% {
+    box-shadow:
+      0 0 0 10px rgba(31, 170, 255, 0.8),
+      0 0 0 18px #fff,
+      0 0 40px 15px rgba(31, 170, 255, 0.8),
+      0 2px 32px 0 rgba(31, 170, 255, 0.8),
+      0 8px 48px 0 rgba(31, 170, 255, 0.4);
+  }
+}
+
+.condition-node .label {
+  color: #fff;
+  font-weight: 600;
+  transform: rotate(-45deg);
+  text-align: center;
+  font-size: 0.9rem;
+  white-space: pre-line;
+  font-size: 0.9rem;
+}
+
+.label-true {
+  position: absolute;
+  top: 35%;
+  right: 0;
+  color: #4caf50;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.label-false {
+  position: absolute;
+  bottom: 0;
+  left: 40%;
+  color: #f44336;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.handle {
+  width: 10px;
+  height: 10px;
+  background: #1faaff;
+  border: 2px solid #fff;
+}
+
+.condition-node.has-error .diamond {
+  border-color: #ff4d4f;
+  box-shadow: 0 0 0 1px rgba(255, 77, 79, 0.3);
+}
+
+.condition-node.has-warning .diamond {
+  border-color: #faad14;
+  box-shadow: 0 0 0 1px rgba(250, 173, 20, 0.3);
+}
+
+.validation-icon {
+  position: absolute;
+  top: 0px;
+  right: 15px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  z-index: 5;
+}
+
+.validation-icon.error {
+  background-color: #ff4d4f;
+}
+
+.validation-icon.warning {
+  background-color: #faad14;
+}
+
+.handle-left {
+  left: -5px;
+}
+
+.handle-right {
+  right: -5px;
+}
+
+.handle-bottom {
+  bottom: -5px;
+}
+
+.selection-indicator {
+  position: absolute;
+  inset: -8px;
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.selection-border {
+  position: absolute;
+  inset: 0;
+  border: 2px dashed #1faaff;
+  border-radius: 10px;
+}
+
+.selection-border.error {
+  border-color: #f44336;
+}
+
+/* Validation styles */
+.condition-node.has-error .diamond {
+  border-color: #ff4d4f;
+  box-shadow: 0 0 0 1px rgba(255, 77, 79, 0.5);
+}
+
+.condition-node.has-warning .diamond {
+  border-color: #faad14;
+  box-shadow: 0 0 0 1px rgba(250, 173, 20, 0.5);
+}
+
+.validation-icon {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 12px;
+  z-index: 10;
+}
+
+.validation-icon.error {
+  background-color: #ff4d4f;
+}
+
+.validation-icon.warning {
+  background-color: #faad14;
+}

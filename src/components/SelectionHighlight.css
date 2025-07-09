@@ -1,0 +1,81 @@
+/* Styles for the selection highlight effects */
+.selection-highlight-wrapper {
+  position: relative;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0px rgba(76, 155, 239, 0.8);
+    border-color: rgba(76, 155, 239, 0.9);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(76, 155, 239, 0.3);
+    border-color: rgba(76, 155, 239, 1);
+  }
+  100% {
+    box-shadow: 0 0 0 0px rgba(76, 155, 239, 0.8);
+    border-color: rgba(76, 155, 239, 0.9);
+  }
+}
+
+@keyframes highlight-edge-pulse {
+  0% {
+    stroke-width: 2;
+    stroke: #4c9bef;
+    filter: drop-shadow(0 0 3px rgba(76, 155, 239, 0.8));
+  }
+  50% {
+    stroke-width: 4;
+    stroke: #2684ff;
+    filter: drop-shadow(0 0 8px rgba(76, 155, 239, 0.5));
+  }
+  100% {
+    stroke-width: 2;
+    stroke: #4c9bef;
+    filter: drop-shadow(0 0 3px rgba(76, 155, 239, 0.8));
+  }
+}
+
+.node-selected-highlight {
+  animation: pulse 1.5s infinite;
+  border: 2px solid rgba(76, 155, 239, 0.9);
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.node-flash-highlight {
+  animation: pulse 0.8s 3;
+}
+
+.edge-selected {
+  stroke: #2684ff !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 3px rgba(76, 155, 239, 0.5));
+  transition: all 0.3s ease;
+}
+
+.edge-flash {
+  animation: highlight-edge-pulse 0.8s 3;
+}
+
+/* For validation error highlight */
+@keyframes error-pulse {
+  0% {
+    box-shadow: 0 0 0 0px rgba(255, 77, 79, 0.8);
+    border-color: rgba(255, 77, 79, 0.9);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 77, 79, 0.3);
+    border-color: rgba(255, 77, 79, 1);
+  }
+  100% {
+    box-shadow: 0 0 0 0px rgba(255, 77, 79, 0.8);
+    border-color: rgba(255, 77, 79, 0.9);
+  }
+}
+
+.node-error-highlight {
+  animation: error-pulse 1.5s 3;
+  border: 2px solid rgba(255, 77, 79, 0.9);
+  border-radius: 5px;
+}

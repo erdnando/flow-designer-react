@@ -1,0 +1,129 @@
+.validation-alert {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: 380px;
+  z-index: 1000;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.validation-alert.slide-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.validation-alert.slide-out {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.validation-alert-container {
+  border-radius: 8px;
+  padding: 0;
+  overflow: hidden;
+  border: none;
+}
+
+.validation-alert-container .ant-alert-content {
+  padding: 16px;
+}
+
+.validation-alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 6px;
+}
+
+.validation-alert-title {
+  font-weight: 600;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.validation-alert-title .anticon {
+  font-size: 18px;
+}
+
+.validation-count-badge {
+  margin-left: 12px;
+}
+
+.validation-alert-description {
+  margin-top: 8px;
+}
+
+.validation-summary {
+  margin-bottom: 10px;
+}
+
+.validation-details {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  border-left: 3px solid;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.validation-errors-list .validation-details {
+  border-color: #ff4d4f;
+}
+
+.validation-warnings-list .validation-details {
+  border-color: #faad14;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.validation-category {
+  font-weight: 500;
+  margin-bottom: 5px;
+  color: inherit;
+}
+
+.validation-errors-list {
+  color: #ff4d4f;
+}
+
+.validation-warnings-list {
+  color: #faad14;
+  margin-top: 12px;
+}
+
+.validation-errors-list ul,
+.validation-warnings-list ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.validation-errors-list li,
+.validation-warnings-list li {
+  margin-bottom: 4px;
+}
+
+.validation-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.15);
+}
+
+.toggle-details-btn {
+  padding: 0;
+}

@@ -1,0 +1,64 @@
+.custom-node-crud-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
+
+.modal-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #23272e;
+  color: #fff;
+  border-radius: 12px;
+  padding: 28px 24px 18px 24px;
+  min-width: 320px;
+  box-shadow: 0 4px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+.modal-content h3 {
+  margin: 0 0 18px 0;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Ant Design Form override styles */
+.modal-content .ant-form-item-label > label {
+  color: #fff;
+}
+
+.modal-content .ant-input {
+  background-color: #181c20;
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.13);
+}
+
+.modal-content .ant-input:focus,
+.modal-content .ant-input:hover {
+  border-color: #1faaff;
+}
+
+.modal-content .ant-btn {
+  border-radius: 6px;
+}
+
+.modal-content .ant-form-item {
+  margin-bottom: 12px;
+}

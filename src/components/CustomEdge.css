@@ -1,0 +1,51 @@
+/* Custom Edge styling */
+.custom-edge {
+  transition: stroke 0.3s ease, stroke-width 0.3s ease;
+}
+
+.custom-edge.selected {
+  stroke: #2684ff;
+  stroke-width: 3px;
+}
+
+.custom-edge.has-error {
+  stroke: #ff4d4f;
+  stroke-width: 2px;
+}
+
+.custom-edge.has-warning {
+  stroke: #faad14;
+  stroke-width: 2px;
+}
+
+/* Edge animations */
+@keyframes edge-flash {
+  0% {
+    stroke-width: 2px;
+    stroke: #4c9bef;
+    filter: drop-shadow(0 0 3px rgba(76, 155, 239, 0.8));
+  }
+  50% {
+    stroke-width: 4px;
+    stroke: #2684ff;
+    filter: drop-shadow(0 0 8px rgba(76, 155, 239, 0.5));
+  }
+  100% {
+    stroke-width: 2px;
+    stroke: #4c9bef;
+    filter: drop-shadow(0 0 3px rgba(76, 155, 239, 0.8));
+  }
+}
+
+.react-flow__edge.edge-flash path {
+  animation: edge-flash 0.8s 3;
+}
+
+/* Edge markers */
+.edge-marker-error {
+  fill: #ff4d4f;
+}
+
+.edge-marker-warning {
+  fill: #faad14;
+}

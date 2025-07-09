@@ -1,0 +1,73 @@
+/* Import ReactFlow styles */
+@import 'reactflow/dist/style.css';
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: dark;
+  color: #ffffff;
+  background-color: #23272e;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #23272e;
+}
+
+/* Antd dark theme overrides */
+.ant-input {
+  background: #333 !important;
+  border-color: #555 !important;
+  color: #ffffff !important;
+}
+
+.ant-input::placeholder {
+  color: #888 !important;
+}
+
+.ant-btn-primary {
+  background: #e14d43 !important;
+  border-color: #e14d43 !important;
+}
+
+.ant-btn-primary:hover {
+  background: #ff6b5a !important;
+  border-color: #ff6b5a !important;
+}
+button:hover {
+  border-color: #646cff;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}

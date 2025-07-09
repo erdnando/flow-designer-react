@@ -1,0 +1,147 @@
+.validation-panel {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 380px;
+  background-color: #1f1f1f;
+  border: 1px solid #444;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  max-height: 500px;
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.validation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #444;
+  background-color: #2a2a2a;
+}
+
+.validation-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.validation-stats {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.validation-filter {
+  padding: 10px 16px;
+  display: flex;
+  justify-content: center;
+  border-bottom: 1px solid #333;
+  background-color: #232323;
+}
+
+.validation-list {
+  overflow-y: auto;
+  max-height: 300px;
+}
+
+.validation-item {
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 10px 16px;
+  border-bottom: 1px solid #333;
+}
+
+.validation-item:hover {
+  background-color: #2d2d2d;
+}
+
+.error-item {
+  border-left: 3px solid #ff4d4f;
+}
+
+.warning-item {
+  border-left: 3px solid #faad14;
+}
+
+.validation-item:hover .error-icon,
+.validation-item:hover .warning-icon {
+  transform: scale(1.1);
+}
+
+.validation-footer {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #444;
+  background-color: #2a2a2a;
+}
+
+.error-icon {
+  color: #ff4d4f;
+  font-size: 18px;
+  transition: transform 0.2s;
+}
+
+.warning-icon {
+  color: #faad14;
+  font-size: 18px;
+  transition: transform 0.2s;
+}
+
+.error-text {
+  color: #ff4d4f;
+}
+
+.warning-text {
+  color: #faad14;
+}
+
+.close-btn {
+  color: #999;
+}
+
+.close-btn:hover {
+  color: #fff;
+  background-color: #3a3a3a;
+}
+
+.validation-toggle-btn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 100;
+}
+
+.validation-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  background-color: #ff4d4f;
+  border-radius: 50%;
+  color: white;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  border: 1px solid #1f1f1f;
+}
