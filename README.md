@@ -2,6 +2,8 @@
 
 Esta es la versión React del Flow Designer, migrada desde Vue.js. Es un editor de flujos drag & drop similar a n8n, que permite diseñar flujos de trabajo visuales mediante nodos conectables.
 
+> 📑 **Documentación Completa**: Ver [ANALISIS_PROYECTO.md](./ANALISIS_PROYECTO.md) para información detallada sobre la arquitectura, implementación y plan de desarrollo del proyecto.
+
 ## 🚀 Características Implementadas
 
 ### ✅ **Funcionalidades Base**

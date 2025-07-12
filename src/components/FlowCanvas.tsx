@@ -19,6 +19,7 @@ interface Connection {
   sourceHandle?: string | null;
   targetHandle?: string | null;
 }
+
 import { Button, Tooltip } from 'antd';
 import { 
   DeleteOutlined, 
@@ -33,6 +34,7 @@ import {
 import { useFlowStore } from '../stores/flowStore';
 import CustomNode from './CustomNode';
 import ConditionNode from './ConditionNode';
+import LayoutStabilizer from './LayoutStabilizer';
 import MinimalNode from './MinimalNode';
 import NodePropertiesPanel from './NodePropertiesPanel';
 import ContextMenu from './ContextMenu';
@@ -77,24 +79,91 @@ const FlowCanvas: React.FC = () => {
   const [panelCollapsed, setPanelCollapsed] = useState(false);
   const [showingProjectProps, setShowingProjectProps] = useState(true); // Mostrar propiedades del flujo por defecto
   
-  // Handler para cuando se inicializa ReactFlow - configuración optimizada
+  // Handler para cuando se inicializa ReactFlow - configuración optimizada para estabilidad
   const onInit = (instance: ReactFlowInstance) => {
     setReactFlowInstance(instance);
     
-    // Aplicar un zoom out inicial simple
-    setTimeout(() => {
+    // Obtener el viewport guardado
+    const storedViewport = useFlowStore.getState().getStoredViewport();
+    
+    // Función para estabilizar las posiciones de los nodos
+    const stabilizeNodePositions = () => {
+      const currentNodes = instance.getNodes();
+      if (currentNodes.length === 0) return;
       
-      // Primero centramos los nodos con fitView
-      instance.fitView({ padding: 0.4 });
-      // Luego aplicamos un zoom específico para ajustar el tamaño de los nodos
+      // Asegurar que todos los nodos mantienen sus posiciones exactas
+      const updatedNodes = currentNodes.map(node => ({
+        ...node,
+        // Asegurar que positionAbsolute está presente y coincide con position
+        positionAbsolute: node.positionAbsolute || { ...node.position },
+        // La posición debe ser exactamente igual a positionAbsolute para evitar saltos
+        position: node.positionAbsolute || { ...node.position },
+        // Desactivar el estado de arrastre para evitar que ReactFlow recalcule posiciones
+        dragging: false,
+        // No seleccionar nodos al inicializar para evitar cambios de estado no deseados
+        selected: false
+      }));
+      
+      // Actualizar los nodos con las posiciones absolutas
+      instance.setNodes(updatedNodes);
+    };
+    
+    // Ejecutar estabilización inmediatamente
+    stabilizeNodePositions();
+    
+    // Secuencia de estabilización robusta con múltiples comprobaciones
+    const timers = [
+      // Primer paso: estabilizar posiciones
+      setTimeout(stabilizeNodePositions, 50),
+      
+      // Segundo paso: ajustar vista y aplicar zoom específico
       setTimeout(() => {
-        const { x, y } = instance.getViewport();
-        // Usar 0.9 para mantener los nodos a un tamaño legible similar a la imagen
-        instance.setViewport({ x, y, zoom: 0.6 });
-      }, 100);
-    }, 100);
-
-     
+        stabilizeNodePositions();
+        
+        // Si tenemos un viewport guardado, usarlo en lugar de calcular uno nuevo
+        if (storedViewport && instance.getNodes().length > 0) {
+          instance.setViewport({
+            x: storedViewport.x,
+            y: storedViewport.y,
+            zoom: storedViewport.zoom
+          });
+        } 
+        // Si no hay viewport guardado pero hay nodos, ajustar la vista
+        else if (instance.getNodes().length > 0) {
+          instance.fitView({ 
+            padding: 0.5, 
+            includeHiddenNodes: false,
+            duration: 200 // Animación suave
+          });
+          
+          // Aplicar un zoom específico después del fitView
+          setTimeout(() => {
+            const { x, y } = instance.getViewport();
+            const finalViewport = { x, y, zoom: 0.6 };
+            instance.setViewport(finalViewport);
+            
+            // Guardar el viewport final
+            useFlowStore.getState().saveViewport(finalViewport);
+          }, 250);
+        }
+        
+        // Desactivar animaciones temporalmente
+        const edges = instance.getEdges();
+        if (edges.length > 0) {
+          instance.setEdges(edges.map(edge => ({ ...edge, animated: false })));
+          
+          // Reactivar animaciones después de la estabilización
+          setTimeout(() => {
+            instance.setEdges(edges);
+          }, 300);
+        }
+      }, 150)
+    ];
+    
+    // Limpiar temporizadores si el componente se desmonta
+    return () => {
+      timers.forEach(clearTimeout);
+    };
   };
   const [contextMenu, setContextMenu] = useState<{ visible: boolean; x: number; y: number; node: Node | null }>({
     visible: false,
@@ -158,7 +227,7 @@ const FlowCanvas: React.FC = () => {
     [setEdges, addEdgeToStore]
   );
 
-  const onNodeClick: NodeMouseHandler = useCallback((_event, node) => {
+  const onNodeClick: NodeMouseHandler = useCallback((_event: React.MouseEvent, node: Node) => {
     setSelectedNodeId(node.id);
     setShowingProjectProps(false);
     // Cerrar menú contextual al hacer clic en un nodo
@@ -200,6 +269,14 @@ const FlowCanvas: React.FC = () => {
       }
 
       if (reactFlowInstance && reactFlowWrapper.current) {
+        // Guardar los nodos existentes y sus posiciones exactas antes de hacer cambios
+        const existingNodes = reactFlowInstance.getNodes().map(node => ({
+          id: node.id,
+          position: { ...node.position },
+          positionAbsolute: node.positionAbsolute ? { ...node.positionAbsolute } : { ...node.position }
+        }));
+        
+        // Calcular la posición exacta donde el usuario soltó el nodo
         const reactFlowBounds = reactFlowWrapper.current.getBoundingClientRect();
         const position = reactFlowInstance.project({
           x: event.clientX - reactFlowBounds.left,
@@ -214,24 +291,102 @@ const FlowCanvas: React.FC = () => {
           nodeType = 'minimal';
         }
 
+        // Crear un ID único para el nuevo nodo
+        const newNodeId = getId();
+        
+        // Crear el nuevo nodo con posición absoluta para estabilidad
         const newNode = {
-          id: getId(),
+          id: newNodeId,
           type: nodeType,
-          position,
+          position: { ...position }, // Usar un nuevo objeto para evitar referencias compartidas
+          positionAbsolute: { ...position }, // Añadir posición absoluta para estabilidad
           data: { 
             label: type.charAt(0).toUpperCase() + type.slice(1),
             type: type,
             subtitle: ''
           },
+          // Evitar que el nuevo nodo afecte el diseño existente
+          selected: false,
+          dragging: false,
         };
 
-        setNodes((nds) => nds.concat(newNode));
+        // Usar una función para actualizar nodos que preserve las posiciones actuales
+        const updateNodesWithPreservedPositions = (currentNodes: Node[]) => {
+          // Primero restauramos las posiciones exactas de los nodos existentes
+          const restoredNodes = currentNodes.map(node => {
+            const existingNode = existingNodes.find(n => n.id === node.id);
+            if (existingNode) {
+              return {
+                ...node,
+                position: { ...existingNode.position },
+                positionAbsolute: { ...existingNode.positionAbsolute }
+              };
+            }
+            return node;
+          });
+          
+          // Luego agregamos el nuevo nodo
+          return [...restoredNodes, newNode];
+        };
+
+        // Actualizar los nodos locales primero, preservando las posiciones
+        setNodes(updateNodesWithPreservedPositions);
+        
+        // Luego actualizar el store con la misma información exacta
         addNode({
           type: nodeType,
           label: type.charAt(0).toUpperCase() + type.slice(1),
-          position,
+          position: { ...position }, // Usar un nuevo objeto para evitar referencias
           data: { type: type, subtitle: '' }
         });
+        
+        // Secuencia de estabilización para mantener posiciones y luego fitear la vista
+        setTimeout(() => {
+          // Asegurar que los nodos existentes mantengan sus posiciones
+          const allCurrentNodes = reactFlowInstance.getNodes();
+          const updatedNodes = allCurrentNodes.map(node => {
+            // Para nodos existentes, mantener su posición original
+            const existingNode = existingNodes.find(n => n.id === node.id);
+            if (existingNode) {
+              return {
+                ...node,
+                position: { ...existingNode.position },
+                positionAbsolute: { ...existingNode.positionAbsolute },
+                dragging: false,
+                selected: false
+              };
+            }
+            // Para el nuevo nodo, mantener la posición de drop
+            if (node.id === newNodeId) {
+              return {
+                ...node,
+                position: { ...position },
+                positionAbsolute: { ...position },
+                dragging: false,
+                selected: true // Seleccionar solo el nuevo nodo
+              };
+            }
+            return node;
+          });
+          
+          reactFlowInstance.setNodes(updatedNodes);
+          
+          // Guardar el viewport actual antes de cualquier cambio
+          const currentViewport = reactFlowInstance.getViewport();
+          
+          // Mantener el mismo zoom y posición en lugar de fitear la vista
+          setTimeout(() => {
+            // Restaurar el viewport exactamente como estaba antes
+            reactFlowInstance.setViewport({
+              x: currentViewport.x,
+              y: currentViewport.y,
+              zoom: currentViewport.zoom
+            });
+            
+            // Guardar el viewport en localStorage
+            useFlowStore.getState().saveViewport(currentViewport);
+          }, 100);
+        }, 50);
       }
     },
     [reactFlowInstance, addNode, setNodes]
@@ -333,22 +488,43 @@ const FlowCanvas: React.FC = () => {
         label: 'Duplicar Nodo',
         action: () => {
           if (node) {
+            // Crea una copia con un desplazamiento inteligente que mantenga la estructura visual
             const position = { 
-              x: node.position.x + 50, 
-              y: node.position.y + 50 
+              x: node.position.x + 150, // Desplazamiento mayor en X para mantener el diseño
+              y: node.position.y + 30   // Desplazamiento menor en Y para mantener el flujo
             };
             
+            // Agregar el nodo con todos los datos necesarios
             addNodeToStore({
               type: node.type,
               label: `${node.data.label} (copia)`,
               position,
-              data: { ...node.data, label: `${node.data.label} (copia)` }
+              data: { 
+                ...node.data, 
+                label: `${node.data.label} (copia)`,
+                // Preservar el tipo original para mantener la coherencia visual
+                type: node.data.type || node.type
+              }
             });
+            
+            // Mantener el viewport actual después de duplicar
+            setTimeout(() => {
+              if (reactFlowInstance) {
+                // Guardar el viewport actual
+                const currentViewport = reactFlowInstance.getViewport();
+                
+                // Asegurarse de mantenerlo
+                reactFlowInstance.setViewport(currentViewport);
+                
+                // Guardar en localStorage
+                useFlowStore.getState().saveViewport(currentViewport);
+              }
+            }, 100);
           }
         },
       },
     ];
-  }, [removeNode, addNodeToStore, setSelectedNodeId]);
+  }, [removeNode, addNodeToStore, setSelectedNodeId, reactFlowInstance]);
 
   return (
     <div className="flow-canvas-wrapper" onClick={onCanvasClick}>
@@ -396,7 +572,24 @@ const FlowCanvas: React.FC = () => {
         </Tooltip>
         <Tooltip title="Ajustar a la vista">
           <Button 
-            onClick={() => reactFlowInstance?.fitView()} 
+            onClick={() => {
+              if (reactFlowInstance) {
+                // No necesitamos guardar el viewport actual porque lo vamos a reemplazar completamente
+                
+                // Ajustar la vista con una animación suave
+                reactFlowInstance.fitView({ 
+                  padding: 0.2, 
+                  duration: 300, 
+                  includeHiddenNodes: false 
+                });
+                
+                // Después de ajustar, guardar el nuevo viewport
+                setTimeout(() => {
+                  const newViewport = reactFlowInstance.getViewport();
+                  useFlowStore.getState().saveViewport(newViewport);
+                }, 350); // Un poco más que la duración de la animación
+              }
+            }} 
             type="text" 
             className="action-btn" 
             icon={<FullscreenOutlined />} 
@@ -430,7 +623,29 @@ const FlowCanvas: React.FC = () => {
           proOptions={{ hideAttribution: true }}
           defaultViewport={{ x: 0, y: 0, zoom: 0.9 }} // Viewport por defecto con zoom optimizado
           className="flow-designer-canvas" // Clase para estilos adicionales
+          snapToGrid={true} // Habilitar snap to grid para mejor organización
+          snapGrid={[15, 15]} // Tamaño de la cuadrícula para snap
+          nodesDraggable={true} // Permitir arrastrar nodos
+          preventScrolling={false} // Permitir scroll en el lienzo
+          elementsSelectable={true} // Permitir selección de elementos
+          selectNodesOnDrag={false} // No seleccionar nodos al arrastrar (para mejor experiencia)
+          onMoveEnd={(_e, viewport) => {
+            // Guardar viewport cuando el usuario termina de mover el canvas
+            useFlowStore.getState().saveViewport(viewport);
+          }}
+          onNodeDragStop={(_e, node) => {
+            // Cuando el usuario termina de arrastrar un nodo, actualizamos su posición en el store
+            // Esto asegura que las posiciones se guarden también en localStorage
+            if (node.positionAbsolute) {
+              useFlowStore.getState().updateNode(node.id, {
+                position: { ...node.positionAbsolute },
+                positionAbsolute: { ...node.positionAbsolute }
+              });
+            }
+          }}
         >
+          {/* Componente para estabilizar el layout y evitar que los nodos se muevan */}
+          <LayoutStabilizer />
           {/* Ocultamos los controles predeterminados de ReactFlow ya que ahora los tenemos en la barra de acciones */}
           {/* <Controls /> */}
           <Background 
