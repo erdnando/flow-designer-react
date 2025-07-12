@@ -197,10 +197,33 @@ const FlowCanvas: React.FC = () => {
     canRedo
   } = useFlowStore();
   
-  // Obtener el nodo seleccionado basado en selectedNodeId
+  // Get the selected node from store similar to Vue's updateSelectedNodeFromList
+  const updateSelectedNodeFromList = useCallback(() => {
+    if (!selectedNodeId) return null;
+    
+    // Find the node in the current node list from store
+    const storeNodes = useFlowStore.getState().nodes;
+    const foundNode = storeNodes.find(node => node.id === selectedNodeId);
+    
+    // If node doesn't exist anymore, return null
+    if (!foundNode) return null;
+    
+    // Ensure node has all required data
+    return {
+      ...foundNode,
+      data: {
+        ...foundNode.data,
+        // Ensure type and label are always defined
+        type: foundNode.data?.type || foundNode.type || 'default',
+        label: foundNode.data?.label || `Nodo ${foundNode.id}`
+      }
+    };
+  }, [selectedNodeId]);
+  
+  // Get the selected node directly from store each time
   const selectedNode = useMemo(() => {
-    return selectedNodeId ? nodes.find(node => node.id === selectedNodeId) || null : null;
-  }, [nodes, selectedNodeId]);
+    return updateSelectedNodeFromList();
+  }, [updateSelectedNodeFromList]);
   const [localNodes, setNodes, onNodesChange] = useNodesState(nodes);
   const [localEdges, setEdges, onEdgesChange] = useEdgesState(edges);
 
@@ -208,6 +231,34 @@ const FlowCanvas: React.FC = () => {
   React.useEffect(() => {
     setNodes(nodes);
   }, [nodes, setNodes]);
+  
+  // Effect to update UI when selected node changes - inspired by Vue's watch pattern
+  React.useEffect(() => {
+    if (selectedNodeId) {
+      // Verify the node actually exists in current nodes
+      const nodeExists = nodes.some(node => node.id === selectedNodeId);
+      
+      if (nodeExists) {
+        // Update visual selection in ReactFlow - only modify selection state
+        setNodes(nds => nds.map(n => ({
+          ...n,
+          selected: n.id === selectedNodeId
+        })));
+        
+        // Always show node properties panel when a node is selected
+        setShowingProjectProps(false);
+        
+        // Expand panel if collapsed
+        if (panelCollapsed) {
+          setPanelCollapsed(false);
+        }
+      } else {
+        // If node no longer exists, deselect
+        setSelectedNodeId(null);
+        setShowingProjectProps(true);
+      }
+    }
+  }, [selectedNodeId, nodes, setNodes, setShowingProjectProps, panelCollapsed, setPanelCollapsed, setSelectedNodeId]);
 
   React.useEffect(() => {
     setEdges(edges);
@@ -228,11 +279,74 @@ const FlowCanvas: React.FC = () => {
   );
 
   const onNodeClick: NodeMouseHandler = useCallback((_event: React.MouseEvent, node: Node) => {
-    setSelectedNodeId(node.id);
+    console.log("Node clicked:", node.id, node.data?.label);
+    
+    // Avoid update if it's already the same node
+    if (selectedNodeId === node.id) {
+      return;
+    }
+    
+    // Ensure node has all required data
+    const updatedNode = {
+      ...node,
+      data: {
+        ...node.data,
+        type: node.data?.type || node.type || 'default',
+        label: node.data?.label || `Nodo ${node.id}`
+      }
+    };
+    
+    // Update node in store to ensure consistency
+    useFlowStore.getState().updateNode(node.id, updatedNode);
+    
+    // Update selection state in specific order to minimize renders
     setShowingProjectProps(false);
-    // Cerrar menú contextual al hacer clic en un nodo
+    setSelectedNodeId(node.id);
+    
+    // Update the UI - only change selection state, not other data
+    setNodes(nds => {
+      return nds.map(n => ({
+        ...n,
+        selected: n.id === node.id
+      }));
+    });
+    
+    // Show the panel if it was collapsed
+    if (panelCollapsed) {
+      setPanelCollapsed(false);
+    }
+    
+    // Close context menu
     setContextMenu({ visible: false, x: 0, y: 0, node: null });
-  }, [setSelectedNodeId]);
+  }, [setSelectedNodeId, setNodes, setShowingProjectProps, setPanelCollapsed, panelCollapsed, setContextMenu, selectedNodeId]);
+  // Handler for clicks on the canvas background (deselect nodes)
+  const onPaneClick = useCallback((event: React.MouseEvent) => {
+    const target = event.target as HTMLElement;
+    
+    // If click was on the background (not on a node or the properties panel)
+    // This is similar to Vue's onCanvasClick but adapted for React/ReactFlow
+    if (!target.closest('.react-flow__node') && !target.closest('.node-properties-panel')) {
+      // Deselect any node in the store
+      setSelectedNodeId(null);
+      
+      // Show project properties
+      setShowingProjectProps(true);
+      
+      // Visually deselect all nodes - only affect the selected property
+      setNodes(nds => nds.map(n => ({
+        ...n,
+        selected: false
+      })));
+      
+      // Close context menu
+      setContextMenu({ visible: false, x: 0, y: 0, node: null });
+      
+      // Expand panel if collapsed
+      if (panelCollapsed) {
+        setPanelCollapsed(false);
+      }
+    }
+  }, [setSelectedNodeId, setNodes, setShowingProjectProps, setContextMenu, panelCollapsed, setPanelCollapsed]);
   
   const onNodeContextMenu = useCallback((event: React.MouseEvent, node: Node) => {
     // Prevenir menú contextual por defecto
@@ -246,12 +360,27 @@ const FlowCanvas: React.FC = () => {
     });
   }, []);
 
-  const onCanvasClick = useCallback(() => {
-    setSelectedNodeId(null);
-    setShowingProjectProps(true);
-    // Cerrar menú contextual al hacer clic en el canvas
-    setContextMenu({ visible: false, x: 0, y: 0, node: null });
-  }, [setSelectedNodeId]);
+  // Simplified version of onCanvasClick matching Vue's implementation
+  const onCanvasClick = useCallback((event: React.MouseEvent) => {
+    const target = event.target as HTMLElement;
+    
+    // Similar to Vue implementation's check for clicks on background
+    if (!target.closest('.react-flow__node') && !target.closest('.node-properties-panel')) {
+      // Clear node selection
+      setSelectedNodeId(null);
+      
+      // Show project properties
+      setShowingProjectProps(true);
+      
+      // Expand panel if collapsed
+      if (panelCollapsed) {
+        setPanelCollapsed(false);
+      }
+      
+      // Close context menu
+      setContextMenu({ visible: false, x: 0, y: 0, node: null });
+    }
+  }, [setSelectedNodeId, setShowingProjectProps, panelCollapsed, setPanelCollapsed, setContextMenu]);
 
   const onDragOver = useCallback((event: DragEvent) => {
     event.preventDefault();
@@ -396,7 +525,7 @@ const FlowCanvas: React.FC = () => {
     setNodes([]);
     setEdges([]);
     setSelectedNodeId(null);
-    setShowingProjectProps(false);
+    setShowingProjectProps(true);  // Mostrar propiedades del proyecto cuando se limpia todo
     clearFlow();
   };
 
@@ -481,6 +610,10 @@ const FlowCanvas: React.FC = () => {
           if (node) {
             removeNode(node.id);
             setSelectedNodeId(null);
+            // Si eliminamos el último nodo, mostrar propiedades del proyecto
+            if (nodes.length <= 1) {
+              setShowingProjectProps(true);
+            }
           }
         },
       },
@@ -494,6 +627,10 @@ const FlowCanvas: React.FC = () => {
               y: node.position.y + 30   // Desplazamiento menor en Y para mantener el flujo
             };
             
+            // Obtener el estado actual de los nodos antes de duplicar
+          const currentNodes = reactFlowInstance?.getNodes() || [];
+          const currentLength = currentNodes.length;
+            
             // Agregar el nodo con todos los datos necesarios
             addNodeToStore({
               type: node.type,
@@ -505,7 +642,37 @@ const FlowCanvas: React.FC = () => {
                 // Preservar el tipo original para mantener la coherencia visual
                 type: node.data.type || node.type
               }
-            });
+            });            // Esperar a que el store se actualice y luego seleccionar el nuevo nodo
+          setTimeout(() => {
+            // Buscar el nodo más reciente añadido (será el último en el array)
+            const updatedNodes = reactFlowInstance?.getNodes() || [];
+            if (updatedNodes.length > currentLength) {
+              const newNode = updatedNodes[updatedNodes.length - 1];
+              
+              console.log("Selecting duplicated node:", newNode.id, newNode.data?.label);
+              
+              // Seleccionar el nodo recién creado
+              setSelectedNodeId(newNode.id);
+              setShowingProjectProps(false);
+              
+              // Asegurarnos de que el panel esté visible
+              if (panelCollapsed) {
+                setPanelCollapsed(false);
+              }
+              
+              // Actualizar la selección visual en ReactFlow
+              // Solo seleccionar el nodo duplicado, deseleccionar los demás
+              setNodes(nds => 
+                nds.map(n => {
+                  // Solo modificar la propiedad selected, sin tocar otros datos
+                  return {
+                    ...n,
+                    selected: n.id === newNode.id
+                  };
+                })
+              );
+            }
+          }, 100);
             
             // Mantener el viewport actual después de duplicar
             setTimeout(() => {
@@ -524,7 +691,17 @@ const FlowCanvas: React.FC = () => {
         },
       },
     ];
-  }, [removeNode, addNodeToStore, setSelectedNodeId, reactFlowInstance]);
+  }, [removeNode, addNodeToStore, setSelectedNodeId, reactFlowInstance, nodes.length, setShowingProjectProps, panelCollapsed, setPanelCollapsed, setNodes]);
+
+  // Estado para forzar la recarga del panel de propiedades
+  const [panelKey, setPanelKey] = useState<number>(0);
+  
+  // Efecto para actualizar la clave del panel cuando cambia el nodo seleccionado
+  React.useEffect(() => {
+    // Incrementar la clave cada vez que cambia el nodo seleccionado
+    // Esto fuerza la recreación completa del componente
+    setPanelKey(prev => prev + 1);
+  }, [selectedNodeId]);
 
   return (
     <div className="flow-canvas-wrapper" onClick={onCanvasClick}>
@@ -613,6 +790,7 @@ const FlowCanvas: React.FC = () => {
           onDragOver={onDragOver}
           onNodeClick={onNodeClick}
           onNodeContextMenu={onNodeContextMenu}
+          onPaneClick={onPaneClick}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           fitView
@@ -677,7 +855,10 @@ const FlowCanvas: React.FC = () => {
         </ReactFlow>
       </div>
 
+      {/* Agregar key={selectedNode?.id || 'project'} para forzar la recreación del componente cuando cambia el nodo */}
       <NodePropertiesPanel
+        // Usamos el panelKey para forzar la recreación completa del componente
+        key={`${selectedNodeId || 'project'}-${panelKey}`} 
         selectedNode={selectedNode}
         collapsed={panelCollapsed}
         disabled={!selectedNode && !showingProjectProps}

@@ -270,10 +270,41 @@ export const useFlowStore = create<FlowState>((set, get) => {
     },
 
     updateNode: (id, updates) => {
+      // Implementación simplificada con mejor manejo de subtítulo
       set((state) => {
-        const updatedNodes = state.nodes.map((node) =>
-          node.id === id ? { ...node, ...updates } : node
-        );
+        // Crear una copia limpia de los nodos actualizados
+        const updatedNodes = state.nodes.map((node) => {
+          // Solo actualizar el nodo específico
+          if (node.id === id) {
+            // Crear una nueva instancia completa del nodo para evitar referencias compartidas
+            const newNode = { ...node };
+            
+            // Si hay actualizaciones de datos, manejarlas con cuidado especial
+            if (updates.data) {
+              // Crear una nueva estructura de datos fusionada
+              newNode.data = {
+                ...(node.data || {}), // Datos originales
+                ...updates.data        // Nuevos datos
+              };
+              
+              // Verificación especial para el subtítulo
+              if ('subtitle' in updates.data) {
+                console.log(`FlowStore: Actualizando subtítulo de nodo ${id} a "${updates.data.subtitle}"`);
+              }
+              
+              // Aplicar otras actualizaciones excluyendo data que ya se manejó
+              const otherUpdates = { ...updates };
+              delete otherUpdates.data;
+              Object.assign(newNode, otherUpdates);
+            } else {
+              // Si no hay actualizaciones específicas de data, simplemente fusionar todas las propiedades
+              Object.assign(newNode, updates);
+            }
+            
+            return newNode;
+          }
+          return node;
+        });
         
         // Guardar en localStorage después de actualizar nodo
         saveToLocalStorage(updatedNodes, state.edges);
@@ -283,7 +314,13 @@ export const useFlowStore = create<FlowState>((set, get) => {
         };
       });
       
-      // Save to history after updating node
+      // Forzar una actualización adicional para garantizar que los cambios sean visibles
+      setTimeout(() => {
+        const nodes = get().nodes;
+        set({ nodes: [...nodes] }); // Crear nueva referencia para forzar actualización de UI
+      }, 0);
+      
+      // Guardar al historial después de actualizar el nodo
       get().saveToHistory();
     },
 
